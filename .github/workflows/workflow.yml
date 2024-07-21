@@ -1,0 +1,48 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build:
+    name: test
+    runs-on: ubuntu-latest
+
+    # set node version
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    # provision mongodb
+    services:
+      mongodb:
+        image: mongo:4.0.4
+        ports:
+          - 27017:27017
+        volumes:
+          - "mongo:/data/db"
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Run tests
+        run: |
+          yarn install
+          yarn build
+          yarn test
+        env:
+          JWT_SECRET: JCxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          LOG_LEVEL: info
+          NODE_ENV: test
+          JWT_EXPIRY: 1d
